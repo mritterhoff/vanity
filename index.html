@@ -18,16 +18,18 @@
     // https://developers.google.com/youtube/iframe_api_reference
     // https://developers.google.com/youtube/player_parameters?playerVersion=HTML5
     
-    var playbackSpeeds = [
+    var playbackDetails = [
       {
         speed: 1,
         start: 37,
-        end: 50
+        end: 50,
+        text: 'Regular speed (1 of 2)'
       },
       {
         speed: .25,
         start: 40,
-        end: 44
+        end: 44,
+        text: 'Let\'s see that again in slow-motion (2 of 2)'
       }
     ];
     var playCount = 0;
@@ -47,14 +49,19 @@
 
     function onStateChange(state) {
       console.log(getStateName(state.data));
-      if (state.data === YT.PlayerState.PLAYING) {
-        console.log('updating speed to: ' + playbackSpeeds[playCount].speed)
-        player.setPlaybackRate(playbackSpeeds[playCount].speed);
-      }
+      // if (state.data === YT.PlayerState.PLAYING) {
+      //   console.log('updating speed to: ' + playbackDetails[playCount].speed)
+      //   player.setPlaybackRate(playbackDetails[playCount].speed);
+      // }
     }
 
     function onPlayerReady(event) {
       event.target.playVideo();
+    }
+
+    function updateText() {
+      var el = document.getElementById('textAtTop');
+      el.innerHTML = playbackDetails[playCount].text;
     }
 
     function getInitialConfigs(options) {
@@ -69,7 +76,7 @@
           cc_load_policy: 0, // Hide closed captions
           iv_load_policy: 3, // Hide the Video Annotations
           start: options.start,
-          end: options.end,
+          // end: options.end,
           autohide: 0, // Hide video controls when playing
         },
         events: {
@@ -87,17 +94,19 @@
 
     // Replace the 'ytplayer' element with an <iframe> and YouTube player after the API code downloads.
     function onYouTubePlayerAPIReady() {
-      player = new YT.Player('ytplayer', getInitialConfigs(playbackSpeeds[playCount]));
+      player = new YT.Player('ytplayer', getInitialConfigs(playbackDetails[playCount]));
+      updateText();
 
       // In order to avoid cueing a new video, add an interval time to check the time every 100ms real time. Once end time is reached, will increment playCount and seek to new start
       setInterval(function() { 
         if (player.getCurrentTime) {  // not initially available
           var time = player.getCurrentTime(); 
-          console.log(time)
-          if (time >= playbackSpeeds[playCount].end) {
+          if (time >= playbackDetails[playCount].end) {
              console.log('Switching to next speed');
-             playCount = (playCount + 1) % playbackSpeeds.length;
-             player.seekTo(playbackSpeeds[playCount].start)
+             playCount = (playCount + 1) % playbackDetails.length;
+             player.setPlaybackRate(playbackDetails[playCount].speed);
+             player.seekTo(playbackDetails[playCount].start)
+             updateText();
           }
         }
       }, 100);
@@ -105,6 +114,7 @@
   </script>
 </head>
 <body>
+  <span id='textAtTop'></span>
   <div id="ytplayer"></div>
 </body>
 </html>
